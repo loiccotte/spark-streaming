@@ -86,6 +86,7 @@ services:
       - ./work:/home/jovyan/work
     command: >
       bash -c "
+        chmod -R 777 /opt/spark/stream-read /home/jovyan/work &&
         ln -sf /opt/spark/stream-read /home/jovyan/stream-read &&
         start-notebook.sh --NotebookApp.token='spark'
       "

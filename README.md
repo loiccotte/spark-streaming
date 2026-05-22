@@ -126,6 +126,7 @@ spark
 **Question**: A quoi sert chaque argument ? 
 
 ---
+On définit le nom de l'application, l'url du master; et le nombre de partions avec la méthode souhaité
 
 ## 4.2 Définition du schéma
 
@@ -156,7 +157,7 @@ schema_defined = StructType([
 **Question** : A quoi sert cette étape de creation de schema ?
 
 ---
-
+Gestion des erreurs et performances
 # 5. Lecture en flux continu
 
 ## 5.1 Lecture du répertoire surveillé
@@ -183,7 +184,22 @@ print("Waiting for data to be processed and appear in the table...")
 **Question** : Il est possible d'avoir la requête ``stream_memory_query`` en deux parties, pouvez vous la refaire autrement ? (L'idée est de comprendre ce qu'elle fais exactement)
 
 ---
-
+STREAM_PATH = "/opt/spark/stream-read"
+read_stream = (spark.readStream
+                         .format("csv")
+                         .schema(schema_defined) 
+                         .option("header", "true")
+                         .option("maxFilesPerTrigger", 1)
+                         .load(STREAM_PATH))
+stream_memory_query=(read_stream.writeStream
+              .outputMode("append")
+              .format("memory")
+              .queryName("stream_data_check")
+              .trigger(processingTime="5 seconds")
+              .start())
+                         
+print("Streaming query started, writing to memory table 'stream_data_check'.")
+print("Waiting for data to be processed and appear in the table...")
 ## 5.2 Affichage temps réel
 
 ```python
@@ -241,6 +257,10 @@ Observer :
 3. Quelle différence existe-t-il entre batch et micro-batch ?
 
 ---
+1 -> trigger(processingTime="5 seconds") impliqueque Spark vérifie les fichiers tout les 5s, il faut attendre le temps d'un cycle
+2 -> Il limite à un le nombre de fichier traité par micro batch.
+3 -> Batch = pon traite tout d'un coup ; micro batch on traite des lots réduits à intervalles réguliers (ici toutes les 5s)
+
 
 # 7. Suppression d’un fichier pendant le streaming
 
@@ -249,10 +269,12 @@ Observer :
 Pendant que le stream tourne :
 
 1. Supprimer un fichier déjà traité.
+
 2. Observer le comportement du flux.
 
 
 ---
+
 
 ## Questions
 
@@ -263,7 +285,10 @@ Pendant que le stream tourne :
 5. Que se passe t-il quand on remet le fichier supprimé ?
 
 ---
-
+1/2 -> Les données restent, car une fois traité spark garde les données en mémoire, elles ne dépendent plus du fichier source.
+3-> Non
+4 -> Via un fichier qui garde la liste des fichiers déja traités
+5 ->Si déja traité, spark ne le reconsidère pas
 ## Point pédagogique important
 
 Spark Structured Streaming considère un fichier comme :
