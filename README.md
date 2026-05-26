@@ -184,6 +184,7 @@ print("Waiting for data to be processed and appear in the table...")
 **Question** : Il est possible d'avoir la requête ``stream_memory_query`` en deux parties, pouvez vous la refaire autrement ? (L'idée est de comprendre ce qu'elle fais exactement)
 
 ---
+```python
 STREAM_PATH = "/opt/spark/stream-read"
 read_stream = (spark.readStream
                          .format("csv")
@@ -200,6 +201,7 @@ stream_memory_query=(read_stream.writeStream
                          
 print("Streaming query started, writing to memory table 'stream_data_check'.")
 print("Waiting for data to be processed and appear in the table...")
+```
 ## 5.2 Affichage temps réel
 
 ```python
@@ -287,7 +289,7 @@ Pendant que le stream tourne :
 ---
 1/2 -> Les données restent, car une fois traité spark garde les données en mémoire, elles ne dépendent plus du fichier source.
 3-> Non
-4 -> Via un fichier qui garde la liste des fichiers déja traités
+4 -> Via un fichier qui garde la liste des chemins d'accès des fichiers déjà traité
 5 ->Si déja traité, spark ne le reconsidère pas
 ## Point pédagogique important
 
@@ -353,7 +355,9 @@ count_query = (
 ## Questions
 
 1. Pourquoi utilise-t-on le mode `complete` ici ?
+On utilise ici complete car on fait une aggrégation, le résultat de la table des résultats change à chaque micro batch, il faut donc tout réecrire. complete, renvoie l'intégralité du résultat mis à jour.
 2. Quelle différence avec le mode `append` ?
+R : Le mode append est sans agrégat (group by), rajoute les nouvelles lignes à la fin de la table, tandis que le mode complete réecrit tout à chaque batch
 
 ---
 
